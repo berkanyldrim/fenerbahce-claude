@@ -277,6 +277,8 @@ export const register: Register = on => {
     }
     if (word === 'status') {
       const stored = asLogo(await $.store.get('logo'))
+      // Read the folder again, so a replaced logo file shows without a reload.
+      folderLogoCache = null
       const folder = await folderLogo($)
       const lines = [
         `mode: ${asMode(await $.store.get('mode'))}`,
