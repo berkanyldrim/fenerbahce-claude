@@ -72,6 +72,7 @@ const HELP = [
   '  off            temayı, kartı ve alt satırı kapatır',
   '  logo <path>    kendi logo dosyanı sağ üste koyar (png/gif/jpg/webp/svg, en fazla ~75 KB)',
   '  logo remove    logoyu kaldırır',
+  '  status         modu ve logonun durumunu gösterir',
 ].join('\n')
 
 const cacheAtom = atom({ plugin: 'fenerbahce', key: 'cache' } as const, null)
@@ -166,23 +167,33 @@ function asLogo(value: unknown): Logo | null {
   return typeof v.mime === 'string' && typeof v.base64 === 'string' ? { mime: v.mime, base64: v.base64 } : null
 }
 
-// A logo.png the person puts in the plugin's own folder, read once per load.
-let folderLogoCache: Logo | null | undefined
+// A logo.png the person puts in the plugin's own folder. Kept once read;
+// a miss is tried again on the next draw.
+let folderLogoCache: Logo | null = null
+let folderLogoError = 'not tried yet'
 async function folderLogo($: EngineInterface): Promise<Logo | null> {
-  if (folderLogoCache !== undefined) return folderLogoCache
-  folderLogoCache = null
+  if (folderLogoCache !== null) return folderLogoCache
+  const path = `${$.plugin.root}/logo.png`
   try {
-    const path = `${$.plugin.root}/logo.png`
-    if (await $.fs.exists(path)) {
-      const { base64 } = await $.fs.read(path, { as: 'bytes' })
-      if (base64.length <= MAX_LOGO_BASE64) {
-        folderLogoCache = { mime: 'image/png', base64 }
-      }
+    if (!(await $.fs.exists(path))) {
+      folderLogoError = `no file at ${path}`
+      return null
     }
-  } catch {
-    // no folder logo
+    const { base64 } = await $.fs.read(path, { as: 'bytes' })
+    if (base64.length > MAX_LOGO_BASE64) {
+      folderLogoError = `too big: ${base64.length} base64 chars`
+      return null
+    }
+    folderLogoCache = { mime: 'image/png', base64 }
+    folderLogoError = ''
+  } catch (err) {
+    folderLogoError = `read failed at ${path}: ${String(err)}`
   }
   return folderLogoCache
+}
+
+async function currentLogo($: EngineInterface): Promise<Logo | null> {
+  return asLogo(await $.store.get('logo')) ?? (await folderLogo($))
 }
 
 async function apply($: EngineInterface): Promise<void> {
@@ -190,10 +201,14 @@ async function apply($: EngineInterface): Promise<void> {
   if (mode === 'off') {
     return
   }
+  // The scene's name says whether a logo is in it, so adding or removing one
+  // changes the look and the app draws the backdrop again.
+  const logo = await currentLogo($)
+  const scene = logo === null ? mode : `${mode}-logo`
   // No blur, so the pixel art stays crisp; the scene itself darkens the middle.
   const look: ThemeSetArgs = {
     colors: theme,
-    backdrop: { scene: mode, glass: { blur: 0, tint: NAVY, opacity: 0.35 } },
+    backdrop: { scene, glass: { blur: 0, tint: NAVY, opacity: 0.35 } },
   }
   const set = await $.theme.set(look)
   if (!set.isDrawn) {
@@ -236,8 +251,22 @@ export const register: Register = on => {
       $.ui.invalidate('ui.render')
       return { text: 'Tema kapandı. Açmak için: /fenerbahce live', isTextDisplayOnly: true }
     }
+    if (word === 'status') {
+      const stored = asLogo(await $.store.get('logo'))
+      const folder = await folderLogo($)
+      const lines = [
+        `mode: ${asMode(await $.store.get('mode'))}`,
+        `plugin root: ${$.plugin.root}`,
+        `logo set by command: ${stored === null ? 'no' : `yes (${stored.base64.length} chars)`}`,
+        `logo.png in folder: ${folder === null ? `no — ${folderLogoError}` : `yes (${folder.base64.length} chars)`}`,
+      ]
+      await apply($)
+      $.ui.invalidate('ui.render')
+      return { text: lines.join('\n'), isTextDisplayOnly: true }
+    }
     if (word === 'logo' && (arg === 'remove' || arg === 'sil')) {
       await $.store.delete('logo')
+      await apply($)
       $.ui.invalidate('ui.render')
       return { text: 'Logo kaldırıldı.', isTextDisplayOnly: true }
     }
@@ -258,6 +287,7 @@ export const register: Register = on => {
       }
       const logo: Logo = { mime, base64 }
       await $.store.set('logo', logo)
+      await apply($)
       $.ui.invalidate('ui.render')
       return { text: 'Logo eklendi, sağ üstte görünecek.', isTextDisplayOnly: true }
     }
@@ -268,11 +298,11 @@ export const register: Register = on => {
     if (e.surface !== 'desktop' && e.surface !== 'mobile') {
       return next(e)
     }
-    const scene = e.props.scene
+    const scene = String(e.props.scene ?? '').split('-')[0]
     if (scene !== 'live' && scene !== 'still') {
       return next(e)
     }
-    const logo = asLogo(await $.store.get('logo')) ?? (await folderLogo($))
+    const logo = await currentLogo($)
     const { Svg } = $.ui.resolve(e)
 
     return (

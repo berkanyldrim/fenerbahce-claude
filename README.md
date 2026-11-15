@@ -34,6 +34,7 @@ eklentisini kur. Uygulamayı koyu moda al.
 | `/fenerbahce off` | Temayı, kartı ve alt satırı kapatır |
 | `/fenerbahce logo <path>` | Kendi logo dosyanı sağ üste koyar |
 | `/fenerbahce logo remove` | Logoyu kaldırır |
+| `/fenerbahce status` | Modu ve logonun durumunu gösterir |
 
 Seçimin oturumlar arasında saklanır.
 
