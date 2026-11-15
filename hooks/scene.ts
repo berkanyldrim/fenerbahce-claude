@@ -193,10 +193,10 @@ export function buildScene(options: { still: boolean; logo: Logo | null }): stri
   const logoMarkup =
     logo === null
       ? ''
-      : `<ellipse cx="1350" cy="430" rx="110" ry="100" fill="url(#logoGlow)"/>
+      : `<ellipse cx="1350" cy="425" rx="130" ry="120" fill="url(#logoGlow)"/>
 ${
   'svg' in logo
-    ? `<svg x="1280" y="360" width="140" height="140" viewBox="${logo.viewBox}" preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges">${logo.svg}</svg>`
+    ? `<svg x="1265" y="340" width="170" height="170" viewBox="${logo.viewBox}" preserveAspectRatio="xMidYMid meet">${logo.svg}</svg>`
     : `<image href="data:${logo.mime};base64,${logo.base64}" x="1280" y="360" width="140" height="140" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated"/>`
 }`
 
