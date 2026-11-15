@@ -11,6 +11,11 @@ stats line.
 > An unofficial fan project. It has no connection to Fenerbahçe Spor Kulübü.
 > It ships no club crest and no club artwork; every drawing in it is original.
 
+![The stadium backdrop: floodlights, a crowd in club colors, a pixel player and a pixel canary](Preview/stadium.jpg)
+
+*The stadium backdrop, still version, with no logo. The usage card and stats
+line are drawn by the plugin in the app, above and below the prompt.*
+
 ## What you get
 
 - **Colors.** Navy surfaces, canary-yellow accent, light text kept readable

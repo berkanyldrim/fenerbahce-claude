@@ -12,6 +12,11 @@ ekler.
 > bağı yoktur. İçinde kulüp arması ya da kulübe ait bir çizim yoktur; tüm
 > çizimler özgündür.
 
+![Stadyum arka planı: projektörler, kulüp renklerinde tribün, piksel oyuncu ve piksel kanarya](Preview/stadium.jpg)
+
+*Stadyum arka planı, hareketsiz hali, logosuz. Kullanım kartı ve bilgi satırı,
+uygulamada mesaj kutusunun üstünde ve altında eklenti tarafından çizilir.*
+
 ## Neler var
 
 - **Renkler.** Lacivert zemin, kanarya sarısı vurgu, sahnenin üstünde bile
