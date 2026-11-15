@@ -228,7 +228,9 @@ async function apply($: EngineInterface): Promise<void> {
   // The scene's name says whether a logo is in it, so adding or removing one
   // changes the look and the app draws the backdrop again.
   const logo = await currentLogo($)
-  const scene = logo === null ? mode : `${mode}-logo`
+  // The tag carries the logo's size, so replacing the file changes the name too.
+  const tag = logo === null ? '' : `-logo${'svg' in logo ? logo.svg.length : logo.base64.length}`
+  const scene = `${mode}${tag}`
   // No blur, so the pixel art stays crisp; the scene itself darkens the middle.
   const look: ThemeSetArgs = {
     colors: theme,
