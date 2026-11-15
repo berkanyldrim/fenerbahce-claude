@@ -3,7 +3,7 @@ import type { EngineInterface, Register, SessionRateLimit, ThemeSetArgs } from '
 
 import type { CacheReading, SessionStats } from '../types'
 import { makeColors } from './make-colors.js'
-import { buildScene, NAVY, YELLOW } from './scene.ts'
+import { buildScene, NAVY, parseSvgLogo, YELLOW } from './scene.ts'
 import type { Logo } from './scene.ts'
 
 // Sarı-lacivert: navy surfaces, canary yellow accent. Dark only, a night match.
@@ -163,33 +163,57 @@ function asMode(value: unknown): Mode {
 
 function asLogo(value: unknown): Logo | null {
   if (typeof value !== 'object' || value === null) return null
-  const v = value as Partial<Logo>
+  const v = value as { mime?: unknown; base64?: unknown; svg?: unknown; viewBox?: unknown }
+  if (typeof v.svg === 'string' && typeof v.viewBox === 'string') return { svg: v.svg, viewBox: v.viewBox }
   return typeof v.mime === 'string' && typeof v.base64 === 'string' ? { mime: v.mime, base64: v.base64 } : null
 }
 
-// A logo.png the person puts in the plugin's own folder. Kept once read;
-// a miss is tried again on the next draw.
+function logoSize(logo: Logo): string {
+  return 'svg' in logo ? `svg, ${logo.svg.length} chars` : `${logo.mime}, ${logo.base64.length} chars`
+}
+
+/** Reads a logo file: SVG inline (drawn on every surface), anything else as a data URI. */
+async function readLogoFile($: EngineInterface, path: string): Promise<Logo | string> {
+  const ext = path.split('.').pop()?.toLowerCase() ?? ''
+  if (ext === 'svg') {
+    const logo = parseSvgLogo(await $.fs.read(path))
+    if (logo === null) return 'SVG okunamadı: viewBox ya da width/height yok.'
+    return 'svg' in logo && logo.svg.length > MAX_LOGO_BASE64 ? 'Logo çok büyük.' : logo
+  }
+  const mime = MIME[ext]
+  if (mime === undefined) return 'Logo svg, png, gif, jpg ya da webp olmalı.'
+  const { base64 } = await $.fs.read(path, { as: 'bytes' })
+  return base64.length > MAX_LOGO_BASE64 ? 'Logo çok büyük.' : { mime, base64 }
+}
+
+// A logo.svg (preferred) or logo.png the person puts in the plugin's own
+// folder. Kept once read; a miss is tried again on the next draw.
 let folderLogoCache: Logo | null = null
 let folderLogoError = 'not tried yet'
 async function folderLogo($: EngineInterface): Promise<Logo | null> {
   if (folderLogoCache !== null) return folderLogoCache
-  const path = `${$.plugin.root}/logo.png`
-  try {
-    if (!(await $.fs.exists(path))) {
-      folderLogoError = `no file at ${path}`
-      return null
+  const errors: string[] = []
+  for (const name of ['logo.svg', 'logo.png']) {
+    const path = `${$.plugin.root}/${name}`
+    try {
+      if (!(await $.fs.exists(path))) {
+        errors.push(`no ${name}`)
+        continue
+      }
+      const read = await readLogoFile($, path)
+      if (typeof read === 'string') {
+        errors.push(`${name}: ${read}`)
+        continue
+      }
+      folderLogoCache = read
+      folderLogoError = ''
+      return read
+    } catch (err) {
+      errors.push(`${name}: ${String(err)}`)
     }
-    const { base64 } = await $.fs.read(path, { as: 'bytes' })
-    if (base64.length > MAX_LOGO_BASE64) {
-      folderLogoError = `too big: ${base64.length} base64 chars`
-      return null
-    }
-    folderLogoCache = { mime: 'image/png', base64 }
-    folderLogoError = ''
-  } catch (err) {
-    folderLogoError = `read failed at ${path}: ${String(err)}`
   }
-  return folderLogoCache
+  folderLogoError = errors.join('; ')
+  return null
 }
 
 async function currentLogo($: EngineInterface): Promise<Logo | null> {
@@ -257,8 +281,8 @@ export const register: Register = on => {
       const lines = [
         `mode: ${asMode(await $.store.get('mode'))}`,
         `plugin root: ${$.plugin.root}`,
-        `logo set by command: ${stored === null ? 'no' : `yes (${stored.base64.length} chars)`}`,
-        `logo.png in folder: ${folder === null ? `no — ${folderLogoError}` : `yes (${folder.base64.length} chars)`}`,
+        `logo set by command: ${stored === null ? 'no' : `yes (${logoSize(stored)})`}`,
+        `logo in folder: ${folder === null ? `no — ${folderLogoError}` : `yes (${logoSize(folder)})`}`,
       ]
       await apply($)
       $.ui.invalidate('ui.render')
@@ -271,21 +295,15 @@ export const register: Register = on => {
       return { text: 'Logo kaldırıldı.', isTextDisplayOnly: true }
     }
     if (word === 'logo' && arg !== '') {
-      const ext = arg.split('.').pop()?.toLowerCase() ?? ''
-      const mime = MIME[ext]
-      if (mime === undefined) {
-        return { text: 'Logo png, gif, jpg, webp ya da svg olmalı.', isTextDisplayOnly: true }
-      }
-      let base64: string
+      let logo: Logo | string
       try {
-        base64 = (await $.fs.read(arg, { as: 'bytes' })).base64
+        logo = await readLogoFile($, arg)
       } catch (err) {
         return { text: `Dosya okunamadı: ${String(err)}`, isTextDisplayOnly: true }
       }
-      if (base64.length > MAX_LOGO_BASE64) {
-        return { text: 'Logo çok büyük. En fazla ~75 KB olmalı; küçük bir piksel logo en iyisi.', isTextDisplayOnly: true }
+      if (typeof logo === 'string') {
+        return { text: logo, isTextDisplayOnly: true }
       }
-      const logo: Logo = { mime, base64 }
       await $.store.set('logo', logo)
       await apply($)
       $.ui.invalidate('ui.render')

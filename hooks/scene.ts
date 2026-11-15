@@ -162,7 +162,28 @@ const PIN_RULES = [
   )
   .join('\n')
 
-export type Logo = { mime: string; base64: string }
+/**
+ * A raster logo (data URI, which some surfaces strip from a scene), or SVG
+ * markup drawn inline: the inner elements and the viewBox they sit in.
+ */
+export type Logo = { mime: string; base64: string } | { svg: string; viewBox: string }
+
+/** Pulls the viewBox and inner markup out of an SVG file, dropping anything scripted. */
+export function parseSvgLogo(text: string): Logo | null {
+  const open = /<svg\b[^>]*>/i.exec(text)
+  const close = text.toLowerCase().lastIndexOf('</svg>')
+  if (open === null || close <= open.index) return null
+  const viewBox = /viewBox\s*=\s*["']([^"']+)["']/i.exec(open[0])?.[1]
+  const width = /\bwidth\s*=\s*["']([\d.]+)/i.exec(open[0])?.[1]
+  const height = /\bheight\s*=\s*["']([\d.]+)/i.exec(open[0])?.[1]
+  const box = viewBox ?? (width !== undefined && height !== undefined ? `0 0 ${width} ${height}` : undefined)
+  if (box === undefined) return null
+  const svg = text
+    .slice(open.index + open[0].length, close)
+    .replace(/<script\b[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*')/gi, '')
+  return { svg, viewBox: box }
+}
 
 export function buildScene(options: { still: boolean; logo: Logo | null }): string {
   const { still, logo } = options
@@ -173,7 +194,11 @@ export function buildScene(options: { still: boolean; logo: Logo | null }): stri
     logo === null
       ? ''
       : `<ellipse cx="1350" cy="430" rx="110" ry="100" fill="url(#logoGlow)"/>
-<image href="data:${logo.mime};base64,${logo.base64}" x="1280" y="360" width="140" height="140" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated"/>`
+${
+  'svg' in logo
+    ? `<svg x="1280" y="360" width="140" height="140" viewBox="${logo.viewBox}" preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges">${logo.svg}</svg>`
+    : `<image href="data:${logo.mime};base64,${logo.base64}" x="1280" y="360" width="140" height="140" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated"/>`
+}`
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
 <style>

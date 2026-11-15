@@ -50,9 +50,12 @@ webp ya da svg, en fazla ~75 KB; piksel logo en iyisi) kendin seç:
 
 Dosya yalnızca senin bilgisayarında saklanır, kimseyle paylaşılmaz.
 
-Komut yerine dosyayı eklentinin klasörüne `logo.png` adıyla da koyabilirsin;
-eklenti onu kendiliğinden kullanır. Küçük bir görsel (ör. 40×40) büyütülünce
-pikselli görünür.
+Komut yerine dosyayı eklentinin klasörüne `logo.svg` (önerilen) ya da
+`logo.png` adıyla da koyabilirsin; eklenti onu kendiliğinden kullanır.
+
+**SVG kullan.** Desktop, sahnenin içine gömülü resimleri (png/jpg) çizmeyebilir;
+SVG ise doğrudan çizilir. Piksel görünüm için küçük karelerden oluşan bir SVG
+en iyisidir (ör. 40×40 `viewBox`, her piksel bir `<rect>`).
 
 ## Notlar
 
