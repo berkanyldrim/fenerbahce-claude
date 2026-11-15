@@ -19,8 +19,8 @@ const { theme, problems } = makeColors({
         'surface-2': '#112246',
         'surface-3': '#142649',
         'text-primary': '#f6f1da',
-        'text-secondary': '#d2d8ea',
-        'text-muted': '#a3aecb',
+        'text-secondary': '#dde2f0',
+        'text-muted': '#b8c2dc',
       },
     },
   },
@@ -185,22 +185,23 @@ async function folderLogo($: EngineInterface): Promise<Logo | null> {
   return folderLogoCache
 }
 
-export const register: Register = on => {
-  async function apply($: EngineInterface): Promise<void> {
-    const mode = asMode(await $.store.get('mode'))
-    if (mode === 'off') {
-      return
-    }
-    const look: ThemeSetArgs = {
-      colors: theme,
-      backdrop: { scene: mode, glass: { blur: 0, tint: NAVY, opacity: 0.2 } },
-    }
-    const set = await $.theme.set(look)
-    if (!set.isDrawn) {
-      $.ui.log(`fenerbahce: theme not drawn: ${set.reason}`, { to: 'debug' })
-    }
+async function apply($: EngineInterface): Promise<void> {
+  const mode = asMode(await $.store.get('mode'))
+  if (mode === 'off') {
+    return
   }
+  // No blur, so the pixel art stays crisp; the scene itself darkens the middle.
+  const look: ThemeSetArgs = {
+    colors: theme,
+    backdrop: { scene: mode, glass: { blur: 0, tint: NAVY, opacity: 0.35 } },
+  }
+  const set = await $.theme.set(look)
+  if (!set.isDrawn) {
+    $.ui.log(`fenerbahce: theme not drawn: ${set.reason}`, { to: 'debug' })
+  }
+}
 
+export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'fenerbahce',

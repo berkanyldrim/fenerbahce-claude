@@ -208,6 +208,12 @@ ${motion}
 <radialGradient id="logoGlow"><stop offset="0" stop-color="${YELLOW}" stop-opacity="0.35"/><stop offset="1" stop-color="${YELLOW}" stop-opacity="0"/></radialGradient>
 <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6c8" stop-opacity="1"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></linearGradient>
 <linearGradient id="horizon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${YELLOW}" stop-opacity="0.9"/><stop offset="1" stop-color="${YELLOW}" stop-opacity="0"/></linearGradient>
+<linearGradient id="calm" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="${NAVY}" stop-opacity="0"/>
+<stop offset="0.24" stop-color="${NAVY}" stop-opacity="0.82"/>
+<stop offset="0.76" stop-color="${NAVY}" stop-opacity="0.82"/>
+<stop offset="1" stop-color="${NAVY}" stop-opacity="0"/>
+</linearGradient>
 <pattern id="stripes" width="120" height="200" patternUnits="userSpaceOnUse"><rect width="60" height="200" fill="${YELLOW}"/></pattern>
 <pattern id="crowd" width="60" height="32" patternUnits="userSpaceOnUse">
 <rect x="0" y="0" width="6" height="6" fill="${YELLOW}"/><rect x="20" y="0" width="6" height="6" fill="#2a4fa8"/><rect x="40" y="0" width="6" height="6" fill="#f2e8c8"/>
@@ -226,6 +232,8 @@ ${floodlight(1340)}
 <rect x="0" y="638" width="1600" height="4" fill="${YELLOW}" opacity="0.85"/>
 <rect x="0" y="642" width="1600" height="40" fill="url(#horizon)" opacity="0.25"/>
 ${pitchLines(still)}
+<!-- a calm band down the middle, where the conversation sits -->
+<rect class="calm" x="0" y="0" width="1600" height="1000" fill="url(#calm)"/>
 <g class="pinL">
 <g transform="translate(110 560)"><g class="bob">${sprite(PLAYER, PLAYER_COLORS, 12)}</g></g>
 <g transform="translate(260 776)">${sprite(BALL, BALL_COLORS, 10)}</g>
