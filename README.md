@@ -1,78 +1,90 @@
-# Fenerbahçe teması — Claude Desktop
+# Fenerbahçe theme for Claude Desktop
 
-Sarı-lacivert bir Claude: gece stadyumu, projektörler, tribünde sarı-lacivert
-kalabalık, sana doğru akan saha çizgileri; solda çubuklu formalı piksel bir
-oyuncu, sağda piksel bir kanarya ve flama.
+**English** · [Türkçe](README.tr.md)
 
-- **Renkler:** lacivert zemin, kanarya sarısı vurgu (koyu mod).
-- **Kullanım kartı** (mesaj kutusunun üstünde): Bağlam, Önbellek, Oturum ve
-  Hafta çubukları. Oturum ve Hafta'daki mavi çizgi, sürenin ne kadarının
-  geçtiğini gösterir; dolu kısım çizgiyi geçtiyse limiti zamandan hızlı
-  harcıyorsun demektir.
-- **Alt bilgi satırı** (mesaj kutusunun altında): model ve efor, oturum
-  süresi, maliyet, tur ve araç sayısı.
+A yellow-and-navy look for Claude Desktop: a night stadium behind the
+conversation, floodlights, a crowd in club colors, pitch lines rolling toward
+you, a pixel player in a striped kit on the left and a pixel canary with a
+pennant on the right. Above and below the prompt it adds usage bars and a
+stats line.
 
-## Kurulum
+> An unofficial fan project. It has no connection to Fenerbahçe Spor Kulübü.
+> It ships no club crest and no club artwork; every drawing in it is original.
 
-Claude Code'da:
+## What you get
+
+- **Colors.** Navy surfaces, canary-yellow accent, light text kept readable
+  over the scene. Dark mode only, like a night match.
+- **Stadium backdrop.** Animated floodlights and pitch lines, or a still
+  version. A darker band runs down the middle so the conversation stays easy
+  to read, and the player and canary move inward as the window gets narrower.
+- **Usage card above the prompt.** Context, cache, session (5 hours) and week
+  (7 days), as segmented bars. On the session and week bars a blue tick marks
+  how much of the window's time has passed: if the fill is ahead of the tick,
+  you are spending the limit faster than time is passing.
+- **Stats line below the prompt.** Model and effort, session time, cost, turn
+  and tool counts, plus the app's own hint text.
+- **Your own logo.** Put a logo in the top right of the scene (see below).
+
+## Install
+
+In Claude Code:
 
 ```
 /plugin marketplace add berkanyldrim/fenerbahce-claude
 /plugin install fenerbahce@fenerbahce
 ```
 
-Desktop uygulamasında: **Ayarlar › Plugins** bölümünde
-`berkanyldrim/fenerbahce-claude` pazar yerini ekle, sonra `fenerbahce`
-eklentisini kur. Uygulamayı koyu moda al.
+In the desktop app: open **Settings › Plugins**, add the marketplace
+`berkanyldrim/fenerbahce-claude`, then install `fenerbahce`. Switch the app to
+dark mode.
 
-## Komutlar
+## Commands
 
-| Komut | Ne yapar |
+| Command | What it does |
 | --- | --- |
-| `/fenerbahce live` | Hareketli stadyum (varsayılan) |
-| `/fenerbahce still` | Hareketsiz stadyum |
-| `/fenerbahce off` | Temayı, kartı ve alt satırı kapatır |
-| `/fenerbahce logo <path>` | Kendi logo dosyanı sağ üste koyar |
-| `/fenerbahce logo remove` | Logoyu kaldırır |
-| `/fenerbahce status` | Modu ve logonun durumunu gösterir |
+| `/fenerbahce live` | Animated stadium (default) |
+| `/fenerbahce still` | Still stadium |
+| `/fenerbahce off` | Turns off the theme, the usage card and the stats line |
+| `/fenerbahce logo <path>` | Shows your own logo file in the top right |
+| `/fenerbahce logo remove` | Removes the logo |
+| `/fenerbahce status` | Shows the mode and whether a logo was found |
 
-Seçimin oturumlar arasında saklanır.
+Your choice is kept between sessions. The earlier Turkish words (`canli`,
+`sabit`, `kapat`, `sil`) still work.
 
-### Logo
+## Adding a logo
 
-Bu depo hiçbir kulüp arması içermez; tüm çizimler özgündür. Kendi
-bilgisayarında bir logo görmek istersen, küçük bir dosyayı (png, gif, jpg,
-webp ya da svg, en fazla ~75 KB; piksel logo en iyisi) kendin seç:
+This repository contains no crest. If you want one, bring your own file and
+check that you may use it.
 
 ```
-/fenerbahce logo C:\Users\sen\Pictures\logo.png
+/fenerbahce logo C:\Users\you\Pictures\logo.svg
 ```
 
-Dosya yalnızca senin bilgisayarında saklanır, kimseyle paylaşılmaz.
+Or drop a file named `logo.svg` (preferred) or `logo.png` into the plugin's
+own folder; the plugin picks it up by itself. The file stays on your
+computer.
 
-Komut yerine dosyayı eklentinin klasörüne `logo.svg` (önerilen) ya da
-`logo.png` adıyla da koyabilirsin; eklenti onu kendiliğinden kullanır.
+- **Use an SVG.** The desktop app can drop images (PNG, JPG) embedded in a
+  scene, while SVG shapes are always drawn.
+- **Size.** Keep the SVG under about 100 KB (100,000 characters). The whole
+  scene may not pass 131,072 characters. If your SVG is larger, simplify it or
+  remove metadata and comments.
+- Scripts and event attributes in an SVG are removed.
+- If you replace the file, the backdrop redraws by itself. If it does not,
+  run `/fenerbahce status` once.
 
-**SVG kullan.** Desktop, sahnenin içine gömülü resimleri (png/jpg) çizmeyebilir;
-SVG ise doğrudan çizilir. Piksel görünüm için küçük karelerden oluşan bir SVG
-en iyisidir (ör. 40×40 `viewBox`, her piksel bir `<rect>`).
+## Notes
 
-## Notlar
+- The backdrop and the card are drawn in the desktop and mobile apps. In a
+  terminal the plugin draws only text versions of the usage card and the
+  stats line.
+- The prompt cache is assumed to live for one hour.
+- Session and week figures appear after the first response; until then they
+  read "veri yok" (no data).
+- Interface text in the card is in Turkish.
 
-- Tema Desktop ve mobil uygulamada görünür; terminal yalnızca kartı ve alt
-  satırı metinle çizer.
-- Önbellek süresi 1 saat varsayılır.
-- Bu, resmi olmayan bir taraftar çalışmasıdır; Fenerbahçe Spor Kulübü ile
-  bir bağı yoktur.
+## License
 
----
-
-## English
-
-An unofficial yellow-navy fan theme for Claude Desktop: a night stadium
-backdrop with a pixel player in a striped kit and a pixel canary, usage bars
-(context, cache, session, week) above the prompt and a stats line below it.
-Install with `/plugin marketplace add berkanyldrim/fenerbahce-claude` and
-`/plugin install fenerbahce@fenerbahce`. Commands: `/fenerbahce live | still
-| off | logo <path> | logo remove`. No club crest is included; all art is
-original. MIT licensed.
+MIT. See [LICENSE](LICENSE).
