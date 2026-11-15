@@ -26,8 +26,17 @@ const { theme, problems } = makeColors({
   },
 })
 
-type Mode = 'canli' | 'sabit' | 'kapali'
-const MODES: readonly Mode[] = ['canli', 'sabit', 'kapali']
+type Mode = 'live' | 'still' | 'off'
+// Earlier versions stored the Turkish words; they still mean the same.
+const MODE_WORDS: Record<string, Mode> = {
+  live: 'live',
+  still: 'still',
+  off: 'off',
+  canli: 'live',
+  sabit: 'still',
+  kapat: 'off',
+  kapali: 'off',
+}
 
 // The prompt cache lives an hour after the last request (this session's TTL).
 const CACHE_TTL_MS = 60 * 60 * 1000
@@ -57,12 +66,12 @@ const MIME: Record<string, string> = {
 }
 
 const HELP = [
-  'Fenerbahçe teması: /fenerbahce <komut>',
-  '  canli          hareketli stadyum (varsayılan)',
-  '  sabit          hareketsiz stadyum',
-  '  kapat          temayı ve çubukları kapatır',
-  '  logo <yol>     kendi logo dosyanı sağ üste koyar (png/gif/jpg/webp/svg, en fazla ~75 KB)',
-  '  logo sil       logoyu kaldırır',
+  'Fenerbahçe teması: /fenerbahce <command>',
+  '  live           hareketli stadyum (varsayılan)',
+  '  still          hareketsiz stadyum',
+  '  off            temayı, kartı ve alt satırı kapatır',
+  '  logo <path>    kendi logo dosyanı sağ üste koyar (png/gif/jpg/webp/svg, en fazla ~75 KB)',
+  '  logo remove    logoyu kaldırır',
 ].join('\n')
 
 const cacheAtom = atom({ plugin: 'fenerbahce', key: 'cache' } as const, null)
@@ -148,7 +157,7 @@ function modelName(id: string): string {
 }
 
 function asMode(value: unknown): Mode {
-  return MODES.includes(value as Mode) ? (value as Mode) : 'canli'
+  return typeof value === 'string' ? (MODE_WORDS[value] ?? 'live') : 'live'
 }
 
 function asLogo(value: unknown): Logo | null {
@@ -157,10 +166,29 @@ function asLogo(value: unknown): Logo | null {
   return typeof v.mime === 'string' && typeof v.base64 === 'string' ? { mime: v.mime, base64: v.base64 } : null
 }
 
+// A logo.png the person puts in the plugin's own folder, read once per load.
+let folderLogoCache: Logo | null | undefined
+async function folderLogo($: EngineInterface): Promise<Logo | null> {
+  if (folderLogoCache !== undefined) return folderLogoCache
+  folderLogoCache = null
+  try {
+    const path = `${$.plugin.root}/logo.png`
+    if (await $.fs.exists(path)) {
+      const { base64 } = await $.fs.read(path, { as: 'bytes' })
+      if (base64.length <= MAX_LOGO_BASE64) {
+        folderLogoCache = { mime: 'image/png', base64 }
+      }
+    }
+  } catch {
+    // no folder logo
+  }
+  return folderLogoCache
+}
+
 export const register: Register = on => {
   async function apply($: EngineInterface): Promise<void> {
     const mode = asMode(await $.store.get('mode'))
-    if (mode === 'kapali') {
+    if (mode === 'off') {
       return
     }
     const look: ThemeSetArgs = {
@@ -176,7 +204,7 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'fenerbahce',
-      description: 'Fenerbahçe teması: /fenerbahce canli | sabit | kapat | logo <yol> | logo sil',
+      description: 'Fenerbahçe theme: /fenerbahce live | still | off | logo <path> | logo remove',
     })
     const unpainted = problems.find(line => line.startsWith("Desktop won't paint"))
     if (unpainted !== undefined) {
@@ -194,19 +222,20 @@ export const register: Register = on => {
     const [word, ...rest] = args.split(/\s+/)
     const arg = rest.join(' ').replace(/^["']|["']$/g, '')
 
-    if (word === 'canli' || word === 'sabit') {
-      await $.store.set('mode', word)
+    const mode = MODE_WORDS[word]
+    if (mode === 'live' || mode === 'still') {
+      await $.store.set('mode', mode)
       await apply($)
       $.ui.invalidate('ui.render')
-      return { text: word === 'canli' ? 'Stadyum hareketli.' : 'Stadyum sabit.', isTextDisplayOnly: true }
+      return { text: mode === 'live' ? 'Stadyum hareketli.' : 'Stadyum sabit.', isTextDisplayOnly: true }
     }
-    if (word === 'kapat') {
-      await $.store.set('mode', 'kapali')
+    if (mode === 'off') {
+      await $.store.set('mode', 'off')
       await $.theme.clear()
       $.ui.invalidate('ui.render')
-      return { text: 'Tema kapandı. Açmak için: /fenerbahce canli', isTextDisplayOnly: true }
+      return { text: 'Tema kapandı. Açmak için: /fenerbahce live', isTextDisplayOnly: true }
     }
-    if (word === 'logo' && arg === 'sil') {
+    if (word === 'logo' && (arg === 'remove' || arg === 'sil')) {
       await $.store.delete('logo')
       $.ui.invalidate('ui.render')
       return { text: 'Logo kaldırıldı.', isTextDisplayOnly: true }
@@ -239,15 +268,15 @@ export const register: Register = on => {
       return next(e)
     }
     const scene = e.props.scene
-    if (scene !== 'canli' && scene !== 'sabit') {
+    if (scene !== 'live' && scene !== 'still') {
       return next(e)
     }
-    const logo = asLogo(await $.store.get('logo'))
+    const logo = asLogo(await $.store.get('logo')) ?? (await folderLogo($))
     const { Svg } = $.ui.resolve(e)
 
     return (
       <Svg
-        source={buildScene({ still: scene === 'sabit', logo })}
+        source={buildScene({ still: scene === 'still', logo })}
         alt="Gece stadyumu: projektörler, sarı-lacivert tribünler, solda çubuklu formalı piksel oyuncu, sağda piksel kanarya"
         isInteractive
       />
@@ -293,7 +322,7 @@ export const register: Register = on => {
 
   // The line under the prompt: club pill, model and effort, session time, cost, counts.
   on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
-    if (asMode(await $.store.get('mode')) === 'kapali') {
+    if (asMode(await $.store.get('mode')) === 'off') {
       return next(e)
     }
     const { Box, Text } = $.ui.resolve(e)
@@ -334,7 +363,7 @@ export const register: Register = on => {
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    if (e.props.hasSurvey || asMode(await $.store.get('mode')) === 'kapali') {
+    if (e.props.hasSurvey || asMode(await $.store.get('mode')) === 'off') {
       return next(e)
     }
     const ui = $.ui.resolve(e)

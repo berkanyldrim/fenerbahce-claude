@@ -29,11 +29,11 @@ eklentisini kur. Uygulamayı koyu moda al.
 
 | Komut | Ne yapar |
 | --- | --- |
-| `/fenerbahce canli` | Hareketli stadyum (varsayılan) |
-| `/fenerbahce sabit` | Hareketsiz stadyum |
-| `/fenerbahce kapat` | Temayı, kartı ve alt satırı kapatır |
-| `/fenerbahce logo <yol>` | Kendi logo dosyanı sağ üste koyar |
-| `/fenerbahce logo sil` | Logoyu kaldırır |
+| `/fenerbahce live` | Hareketli stadyum (varsayılan) |
+| `/fenerbahce still` | Hareketsiz stadyum |
+| `/fenerbahce off` | Temayı, kartı ve alt satırı kapatır |
+| `/fenerbahce logo <path>` | Kendi logo dosyanı sağ üste koyar |
+| `/fenerbahce logo remove` | Logoyu kaldırır |
 
 Seçimin oturumlar arasında saklanır.
 
@@ -48,6 +48,10 @@ webp ya da svg, en fazla ~75 KB; piksel logo en iyisi) kendin seç:
 ```
 
 Dosya yalnızca senin bilgisayarında saklanır, kimseyle paylaşılmaz.
+
+Komut yerine dosyayı eklentinin klasörüne `logo.png` adıyla da koyabilirsin;
+eklenti onu kendiliğinden kullanır. Küçük bir görsel (ör. 40×40) büyütülünce
+pikselli görünür.
 
 ## Notlar
 
@@ -65,6 +69,6 @@ An unofficial yellow-navy fan theme for Claude Desktop: a night stadium
 backdrop with a pixel player in a striped kit and a pixel canary, usage bars
 (context, cache, session, week) above the prompt and a stats line below it.
 Install with `/plugin marketplace add berkanyldrim/fenerbahce-claude` and
-`/plugin install fenerbahce@fenerbahce`. Commands: `/fenerbahce canli | sabit
-| kapat | logo <path> | logo sil`. No club crest is included; all art is
+`/plugin install fenerbahce@fenerbahce`. Commands: `/fenerbahce live | still
+| off | logo <path> | logo remove`. No club crest is included; all art is
 original. MIT licensed.
