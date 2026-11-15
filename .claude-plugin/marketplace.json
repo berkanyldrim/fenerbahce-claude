@@ -1,0 +1,12 @@
+{
+  "name": "fenerbahce",
+  "owner": { "name": "berkanyldrim" },
+  "description": "Sarı-lacivert Fenerbahçe teması, Claude Desktop için.",
+  "plugins": [
+    {
+      "name": "fenerbahce",
+      "source": "./",
+      "description": "Sarı-lacivert Claude: gece stadyumu arka planı, piksel oyuncu ve kanarya, kullanım çubukları ve alt bilgi satırı."
+    }
+  ]
+}
